@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aksworkshopcops
+spec:
+  selector:
+    matchLabels:
+      app: aksworkshopcops
+  template:
+    metadata:
+      labels:
+        app: aksworkshopcops
+    spec:
+      containers:
+      - name: aksworkshopcops
+        image: ghcr.io/mohitchhabra/aksworkshopcops:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 80
+        imagepullsecret: ghcrsecret
