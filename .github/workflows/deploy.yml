@@ -1,0 +1,50 @@
+name: Build and deploy an app to AKS
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+env:
+  GITHUB_CONTAINER_REGISTRY: ghcr.io/mohitchhabra/aksworkshopcops:latest
+  CONTAINER_NAME: aksworkshopcops
+  RESOURCE_GROUP: aksworkshopcops
+  CLUSTER_NAME: aksworkshopcops
+  DEPLOYMENT_MANIFEST_PATH: kubernetes/deployment.yml
+
+jobs:
+  deploy:
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set up kubelogin for non-interactive login
+        uses: azure/use-kubelogin@v1
+        with:
+          kubelogin-version: 'v0.0.25'
+
+      - name: Get K8s context
+        uses: azure/aks-set-context@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          cluster-name: ${{ env.CLUSTER_NAME }}
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          admin: 'false'
+          kubeconfig: ${{ env.KUBECONFIG }}
+
+      - name: Deploy application
+        uses: Azure/k8s-deploy@v1
+        with:
+          manifests: ${{ env.DEPLOYMENT_MANIFEST_PATH }}
+          images: ${{ env.GITHUB_CONTAINER_REGISTRY }}
